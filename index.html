@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>モル濃度 代入＆自動計算 20問採点・苦手分析トレーニング</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-light: #eff6ff;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --border: #cbd5e1;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --step3-color: #8b5cf6;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            padding: 20px;
+            max-width: 950px;
+            margin: 0 auto;
+            color: #1e293b;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 1.6rem;
+            color: var(--primary);
+            margin-bottom: 6px;
+        }
+
+        /* ダッシュボード（成績・苦手分析） */
+        .dashboard {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+
+        .dashboard-header h2 {
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card {
+            background: var(--bg);
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .stat-title {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: bold;
+        }
+
+        .stat-val {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-top: 4px;
+        }
+
+        .analysis-box {
+            background: #fffbebf8;
+            border: 1px solid #fde68a;
+            border-left: 4px solid var(--warning);
+            border-radius: 6px;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* ナビゲーション panel */
+        .nav-panel {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .select-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        select {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .btn-nav {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .btn-nav:hover { background: #1d4ed8; }
+
+        .problem-card {
+            background: #f1f5f9;
+            border-left: 5px solid var(--primary);
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        /* 数値カードエリア */
+        .cards-area {
+            background: white;
+            border: 2px dashed var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .card-label {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #64748b;
+            width: 100%;
+        }
+
+        .num-card {
+            background: var(--primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.1s, background 0.2s;
+        }
+
+        .num-card.step3-card { background: var(--step3-color); }
+        .num-card.selected { outline: 3px solid #f59e0b; transform: scale(1.05); }
+
+        /* 計算ステップ */
+        .step-container {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 15px;
+        }
+
+        .step-title {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .fraction-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+
+        .fraction {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+        }
+
+        .drop-zone {
+            width: 140px;
+            height: 38px;
+            border: 2px dashed var(--primary);
+            border-radius: 6px;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .drop-zone.filled { border-style: solid; background: #dbeafe; }
+
+        .line {
+            width: 100%;
+            height: 2px;
+            background-color: #333;
+            margin: 4px 0;
+        }
+
+        .result-box {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--success);
+            min-width: 80px;
+        }
+
+        .msg {
+            font-size: 0.85rem;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .msg.err { color: var(--danger); }
+        .msg.ok { color: var(--success); }
+
+        .btn-reset {
+            background: #64748b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            display: block;
+            margin: 20px auto 0;
+        }
+
+        .btn-reset:hover { background: #475569; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🧪 モル濃度 20問採点・苦手分析トレーニング</h1>
+    <p>公式の（分子）・（分母）にカードをセット！誤答履歴から得意・苦手箇所を判定します。</p>
+</header>
+
+<!-- 成績・苦手分析ダッシュボード -->
+<div class="dashboard">
+    <div class="dashboard-header">
+        <h2>📊 成績 ＆ 誤答分析レポート</h2>
+        <button onclick="resetStats()" style="font-size:0.75rem; padding:3px 8px; border-radius:4px; border:1px solid #cbd5e1; background:#f8fafc; cursor:pointer;">記録リセット</button>
+    </div>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-title">正解問題数</div>
+            <div class="stat-val" id="stat-cleared">0 / 20</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Step 1 ミス (物質量)</div>
+            <div class="stat-val" id="stat-err1" style="color:var(--danger);">0 回</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Step 2 ミス (体積L)</div>
+            <div class="stat-val" id="stat-err2" style="color:var(--danger);">0 回</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Step 3 ミス (濃度)</div>
+            <div class="stat-val" id="stat-err3" style="color:var(--danger);">0 回</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">分子/分母の逆ミス</div>
+            <div class="stat-val" id="stat-err-reverse" style="color:var(--warning);">0 回</div>
+        </div>
+    </div>
+
+    <div class="analysis-box" id="analysis-text">
+        💡 <strong>苦手アドバイス：</strong> 問題を解き進めると、ここにあなたの間違いやすい傾向と具体的なアドバイスが表示されます。
+    </div>
+</div>
+
+<!-- ナビゲーション panel -->
+<div class="nav-panel">
+    <div class="select-group">
+        <label for="problem-select">問題選択:</label>
+        <select id="problem-select"></select>
+    </div>
+    <div>
+        <button class="btn-nav" onclick="prevProblem()">◀ 前の問題</button>
+        <button class="btn-nav" onclick="randomProblem()">🔀 ランダム出題</button>
+        <button class="btn-nav" onclick="nextProblem()">次の問題 ▶</button>
+    </div>
+</div>
+
+<!-- 問題文 -->
+<div class="problem-card" id="problem-text"></div>
+
+<!-- 数値カードエリア -->
+<div class="cards-area" id="cards-container">
+    <div class="card-label">利用可能な値（カードをタップ選択 ➔ 枠をタップして代入）:</div>
+</div>
+
+<!-- Step 1 -->
+<div class="step-container">
+    <div class="step-title">① 溶質の物質量 (mol) を求める</div>
+    <div class="fraction-box">
+        <span>物質量 ＝</span>
+        <div class="fraction">
+            <div class="drop-zone" id="s1-num">（ 分子 ）</div>
+            <div class="line"></div>
+            <div class="drop-zone" id="s1-den">（ 分母 ）</div>
+        </div>
+        <span>＝</span>
+        <div class="result-box" id="s1-res">? mol</div>
+    </div>
+    <div class="msg" id="s1-msg"></div>
+</div>
+
+<!-- Step 2 -->
+<div class="step-container">
+    <div class="step-title">② 溶液の体積 (L) を換算する</div>
+    <div class="fraction-box">
+        <span>体積(L) ＝</span>
+        <div class="fraction">
+            <div class="drop-zone" id="s2-num">（ 分子 ）</div>
+            <div class="line"></div>
+            <div style="text-align:center; padding: 4px; font-weight:bold;">1000 mL/L</div>
+        </div>
+        <span>＝</span>
+        <div class="result-box" id="s2-res">? L</div>
+    </div>
+    <div class="msg" id="s2-msg"></div>
+</div>
+
+<!-- Step 3 -->
+<div class="step-container">
+    <div class="step-title">③ モル濃度 (mol/L) を計算する</div>
+    <div class="fraction-box">
+        <span>モル濃度 ＝</span>
+        <div class="fraction">
+            <div class="drop-zone" id="s3-num">（ 分子 ）</div>
+            <div class="line"></div>
+            <div class="drop-zone" id="s3-den">（ 分母 ）</div>
+        </div>
+        <span>＝</span>
+        <div class="result-box" id="s3-res" style="font-size:1.3rem;">? mol/L</div>
+    </div>
+    <div class="msg" id="s3-msg"></div>
+</div>
+
+<button class="btn-reset" onclick="resetAll()">この問題をやり直す</button>
+
+<script>
+    // 全20問データベース
+    const problems = [
+        { id: 1, name: "食塩 (NaCl) - 500 mL", solute: "塩化ナトリウム (NaCl)", mass: 11.7, mw: 58.5, vol: 500 },
+        { id: 2, name: "水酸化ナトリウム (NaOH) - 200 mL", solute: "水酸化ナトリウム (NaOH)", mass: 8.0, mw: 40.0, vol: 200 },
+        { id: 3, name: "ブドウ糖 (C6H12O6) - 250 mL", solute: "ブドウ糖 (C6H12O6)", mass: 45.0, mw: 180.0, vol: 250 },
+        { id: 4, name: "硫酸銅(II) (CuSO4) - 100 mL", solute: "硫酸銅(II) (CuSO4)", mass: 16.0, mw: 160.0, vol: 100 },
+        { id: 5, name: "塩化カリウム (KCl) - 400 mL", solute: "塩化カリウム (KCl)", mass: 14.9, mw: 74.5, vol: 400 },
+        { id: 6, name: "スクロース (C12H22O11) - 500 mL", solute: "スクロース (C12H22O11)", mass: 68.4, mw: 342.0, vol: 500 },
+        { id: 7, name: "硝酸カリウム (KNO3) - 200 mL", solute: "硝酸カリウム (KNO3)", mass: 10.1, mw: 101.0, vol: 200 },
+        { id: 8, name: "炭酸ナトリウム (Na2CO3) - 1000 mL", solute: "炭酸ナトリウム (Na2CO3)", mass: 53.0, mw: 106.0, vol: 1000 },
+        { id: 9, name: "尿素 (CH4N2O) - 300 mL", solute: "尿素 (CH4N2O)", mass: 18.0, mw: 60.0, vol: 300 },
+        { id: 10, name: "塩化マグネシウム (MgCl2) - 500 mL", solute: "塩化マグネシウム (MgCl2)", mass: 19.0, mw: 95.0, vol: 500 },
+        { id: 11, name: "水酸化カリウム (KOH) - 250 mL", solute: "水酸化カリウム (KOH)", mass: 14.0, mw: 56.0, vol: 250 },
+        { id: 12, name: "酢酸 (CH3COOH) - 100 mL", solute: "酢酸 (CH3COOH)", mass: 3.0, mw: 60.0, vol: 100 },
+        { id: 13, name: "硫酸アンモニウム ((NH4)2SO4) - 500 mL", solute: "硫酸アンモニウム ((NH4)2SO4)", mass: 33.0, mw: 132.0, vol: 500 },
+        { id: 14, name: "硝酸銀 (AgNO3) - 200 mL", solute: "硝酸銀 (AgNO3)", mass: 8.5, mw: 170.0, vol: 200 },
+        { id: 15, name: "塩化カルシウム (CaCl2) - 400 mL", solute: "塩化カルシウム (CaCl2)", mass: 22.2, mw: 111.0, vol: 400 },
+        { id: 16, name: "過酸化水素 (H2O2) - 100 mL", solute: "過酸化水素 (H2O2)", mass: 3.4, mw: 34.0, vol: 100 },
+        { id: 17, name: "硫酸鉄(II) (FeSO4) - 250 mL", solute: "硫酸鉄(II) (FeSO4)", mass: 7.6, mw: 152.0, vol: 250 },
+        { id: 18, name: "クエン酸 (C6H8O7) - 500 mL", solute: "クエン酸 (C6H8O7)", mass: 48.0, mw: 192.0, vol: 500 },
+        { id: 19, name: "臭化カリウム (KBr) - 200 mL", solute: "臭化カリウム (KBr)", mass: 23.8, mw: 119.0, vol: 200 },
+        { id: 20, name: "硝酸アンモニウム (NH4NO3) - 1000 mL", solute: "硝酸アンモニウム (NH4NO3)", mass: 40.0, mw: 80.0, vol: 1000 }
+    ];
+
+    let currentIdx = 0;
+    let selectedCard = null;
+    let s1_mol = null;
+    let s2_liter = null;
+
+    // 採点・誤答カウント用の状態データ
+    let stats = {
+        clearedSet: new Set(),
+        err1: 0,
+        err2: 0,
+        err3: 0,
+        errReverse: 0
+    };
+
+    const selectElem = document.getElementById('problem-select');
+    const problemText = document.getElementById('problem-text');
+    const cardsContainer = document.getElementById('cards-container');
+    const zones = document.querySelectorAll('.drop-zone');
+
+    // 初期化：セレクトボックス設定
+    problems.forEach((p, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `問${p.id}: ${p.name}`;
+        selectElem.appendChild(opt);
+    });
+
+    selectElem.addEventListener('change', (e) => {
+        currentIdx = parseInt(e.target.value);
+        loadProblem();
+    });
+
+    function loadProblem() {
+        resetAll();
+        selectElem.value = currentIdx;
+        const p = problems[currentIdx];
+
+        const isCleared = stats.clearedSet.has(p.id) ? " ✅ [クリア済]" : "";
+        problemText.innerHTML = `<strong>【問題 ${p.id} / 20】</strong>${isCleared}<br>` +
+            `${p.mass} g の ${p.solute} を水に溶かして ${p.vol} mL にした水溶液のモル濃度 (mol/L) を求めなさい。（${p.solute.split(' ')[0]}のモル質量: ${p.mw} g/mol）`;
+
+        cardsContainer.innerHTML = '<div class="card-label">利用可能な値（カードをタップ選択 ➔ 枠をタップして代入）:</div>';
+
+        const initialCards = [
+            { val: p.mass, unit: 'g', id: 'card-mass' },
+            { val: p.mw, unit: 'g/mol', id: 'card-mw' },
+            { val: p.vol, unit: 'mL', id: 'card-vol' }
+        ];
+
+        initialCards.sort(() => Math.random() - 0.5);
+
+        initialCards.forEach(c => {
+            const card = document.createElement('div');
+            card.className = 'num-card';
+            card.draggable = true;
+            card.id = c.id;
+            card.dataset.val = c.val;
+            card.dataset.unit = c.unit;
+            card.textContent = `${c.val} ${c.unit}`;
+            bindCardEvents(card);
+            cardsContainer.appendChild(card);
+        });
+    }
+
+    function bindCardEvents(card) {
+        card.addEventListener('click', () => {
+            document.querySelectorAll('.num-card').forEach(c => c.classList.remove('selected'));
+            selectedCard = card;
+            card.classList.add('selected');
+        });
+
+        card.addEventListener('dragstart', (e) => {
+            selectedCard = card;
+            e.dataTransfer.setData('text/plain', card.id || '');
+        });
+    }
+
+    zones.forEach(zone => {
+        zone.addEventListener('dragover', (e) => e.preventDefault());
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            applyCardToZone(zone);
+        });
+        zone.addEventListener('click', () => {
+            if (selectedCard) applyCardToZone(zone);
+        });
+    });
+
+    function applyCardToZone(zone) {
+        if (!selectedCard) return;
+        
+        const val = selectedCard.dataset.val;
+        const unit = selectedCard.dataset.unit;
+        
+        zone.textContent = `${val} ${unit}`;
+        zone.dataset.val = val;
+        zone.classList.add('filled');
+
+        document.querySelectorAll('.num-card').forEach(c => c.classList.remove('selected'));
+        selectedCard = null;
+
+        calcStep1();
+        calcStep2();
+        calcStep3();
+        updateDashboard();
+    }
+
+    function calcStep1() {
+        const p = problems[currentIdx];
+        const num = parseFloat(document.getElementById('s1-num').dataset.val);
+        const den = parseFloat(document.getElementById('s1-den').dataset.val);
+        const msg = document.getElementById('s1-msg');
+        const res = document.getElementById('s1-res');
+
+        if (num && den) {
+            if (Math.abs(num - p.mass) < 0.001 && Math.abs(den - p.mw) < 0.001) {
+                s1_mol = num / den;
+                const valStr = s1_mol.toFixed(3);
+                res.textContent = valStr + " mol";
+                msg.textContent = "✓ 正しく代入できました！①のカードが追加されました。";
+                msg.className = "msg ok";
+
+                if (!document.getElementById('card-s1')) {
+                    const newCard = document.createElement('div');
+                    newCard.className = 'num-card step3-card';
+                    newCard.draggable = true;
+                    newCard.id = 'card-s1';
+                    newCard.dataset.val = valStr;
+                    newCard.dataset.unit = 'mol';
+                    newCard.textContent = `${valStr} mol (①)`;
+                    bindCardEvents(newCard);
+                    cardsContainer.appendChild(newCard);
+                }
+            } else if (Math.abs(num - p.mw) < 0.001 && Math.abs(den - p.mass) < 0.001) {
+                msg.textContent = "✕ 分子（質量 g）と分母（モル質量 g/mol）が逆になっています";
+                msg.className = "msg err";
+                res.textContent = "? mol";
+                stats.err1++;
+                stats.errReverse++;
+            } else {
+                msg.textContent = "✕ 正しい数値をセットしてください";
+                msg.className = "msg err";
+                res.textContent = "? mol";
+                stats.err1++;
+            }
+        }
+    }
+
+    function calcStep2() {
+        const p = problems[currentIdx];
+        const num = parseFloat(document.getElementById('s2-num').dataset.val);
+        const msg = document.getElementById('s2-msg');
+        const res = document.getElementById('s2-res');
+
+        if (num) {
+            if (Math.abs(num - p.vol) < 0.001) {
+                s2_liter = num / 1000;
+                const valStr = s2_liter.toFixed(3);
+                res.textContent = valStr + " L";
+                msg.textContent = "✓ L（リットル）に換算できました！②のカードが追加されました。";
+                msg.className = "msg ok";
+
+                if (!document.getElementById('card-s2')) {
+                    const newCard = document.createElement('div');
+                    newCard.className = 'num-card step3-card';
+                    newCard.draggable = true;
+                    newCard.id = 'card-s2';
+                    newCard.dataset.val = valStr;
+                    newCard.dataset.unit = 'L';
+                    newCard.textContent = `${valStr} L (②)`;
+                    bindCardEvents(newCard);
+                    cardsContainer.appendChild(newCard);
+                }
+            } else {
+                msg.textContent = "✕ 体積(mL)の数値をセットしてください";
+                msg.className = "msg err";
+                res.textContent = "? L";
+                stats.err2++;
+            }
+        }
+    }
+
+    function calcStep3() {
+        const num = parseFloat(document.getElementById('s3-num').dataset.val);
+        const den = parseFloat(document.getElementById('s3-den').dataset.val);
+        const res = document.getElementById('s3-res');
+        const msg = document.getElementById('s3-msg');
+        const p = problems[currentIdx];
+
+        if (num && den) {
+            const expectedMol = s1_mol;
+            const expectedL = s2_liter;
+
+            if (expectedMol && expectedL && Math.abs(num - expectedMol) < 0.005 && Math.abs(den - expectedL) < 0.005) {
+                const conc = num / den;
+                res.textContent = conc.toFixed(3) + " mol/L";
+                msg.textContent = "🎉 大正解！正しく解答できました！";
+                msg.className = "msg ok";
+                
+                stats.clearedSet.add(p.id);
+                document.getElementById('problem-select').options[currentIdx].textContent = `問${p.id}: ${p.name} ✅`;
+            } else if (expectedMol && expectedL && Math.abs(num - expectedL) < 0.005 && Math.abs(den - expectedMol) < 0.005) {
+                msg.textContent = "✕ 分子（物質量 mol）と分母（体積 L）が逆になっています";
+                msg.className = "msg err";
+                res.textContent = "? mol/L";
+                stats.err3++;
+                stats.errReverse++;
+            } else {
+                msg.textContent = "✕ ①で求めた mol と ②で求めた L を正しく選択してください";
+                msg.className = "msg err";
+                res.textContent = "? mol/L";
+                stats.err3++;
+            }
+        }
+    }
+
+    function updateDashboard() {
+        document.getElementById('stat-cleared').textContent = `${stats.clearedSet.size} / 20`;
+        document.getElementById('stat-err1').textContent = `${stats.err1} 回`;
+        document.getElementById('stat-err2').textContent = `${stats.err2} 回`;
+        document.getElementById('stat-err3').textContent = `${stats.err3} 回`;
+        document.getElementById('stat-err-reverse').textContent = `${stats.errReverse} 回`;
+
+        // フィードバック生成
+        const analysisText = document.getElementById('analysis-text');
+        const totalErr = stats.err1 + stats.err2 + stats.err3;
+
+        if (totalErr === 0) {
+            analysisText.innerHTML = "💡 <strong>苦手アドバイス：</strong> 現在エラーなし！全問正解を目指してこの調子で解き進めましょう。";
+            return;
+        }
+
+        let adv = "💡 <strong>苦手アドバイス：</strong> ";
+
+        if (stats.errReverse > 0 && stats.errReverse >= totalErr * 0.4) {
+            adv += "<strong>【分子と分母の逆転ミスが目立ちます】</strong>「求めたい値（molやmol/L）を作るには何を何で割るか」公式の上下関係をしっかり確認しましょう！";
+        } else if (stats.err1 >= stats.err2 && stats.err1 >= stats.err3) {
+            adv += "<strong>【Step 1 (質量→mol換算) での誤答が多いです】</strong> 「物質量 (mol) ＝ 質量 (g) ÷ モル質量 (g/mol)」の公式代入を再確認しましょう！";
+        } else if (stats.err2 >= stats.err1 && stats.err2 >= stats.err3) {
+            adv += "<strong>【Step 2 (mL→L単位換算) での誤答が多いです】</strong> 問題文の mL をそのまま使わず、必ず「1000で割って L に直す」カードを選びましょう！";
+        } else if (stats.err3 >= stats.err1 && stats.err3 >= stats.err2) {
+            adv += "<strong>【Step 3 (最終モル濃度計算) での誤答が多いです】</strong> ①で計算した mol を分子に、②で換算した L を分母にセットする組み合わせに注目しましょう！";
+        }
+
+        analysisText.innerHTML = adv;
+    }
+
+    function resetStats() {
+        stats = { clearedSet: new Set(), err1: 0, err2: 0, err3: 0, errReverse: 0 };
+        problems.forEach((p, idx) => {
+            selectElem.options[idx].textContent = `問${p.id}: ${p.name}`;
+        });
+        updateDashboard();
+        loadProblem();
+    }
+
+    function resetAll() {
+        s1_mol = null;
+        s2_liter = null;
+        selectedCard = null;
+
+        document.getElementById('s1-num').textContent = "（ 分子 ）";
+        document.getElementById('s1-den').textContent = "（ 分母 ）";
+        document.getElementById('s2-num').textContent = "（ 分子 ）";
+        document.getElementById('s3-num').textContent = "（ 分子 ）";
+        document.getElementById('s3-den').textContent = "（ 分母 ）";
+
+        document.querySelectorAll('.drop-zone').forEach(z => {
+            z.classList.remove('filled');
+            delete z.dataset.val;
+        });
+
+        document.querySelectorAll('.result-box').forEach(r => {
+            if(r.id === 's3-res') r.textContent = "? mol/L";
+            else if(r.id === 's1-res') r.textContent = "? mol";
+            else if(r.id === 's2-res') r.textContent = "? L";
+        });
+
+        document.querySelectorAll('.msg').forEach(m => m.textContent = "");
+
+        const cardS1 = document.getElementById('card-s1');
+        const cardS2 = document.getElementById('card-s2');
+        if (cardS1) cardS1.remove();
+        if (cardS2) cardS2.remove();
+
+        document.querySelectorAll('.num-card').forEach(c => c.classList.remove('selected'));
+    }
+
+    function prevProblem() {
+        currentIdx = (currentIdx - 1 + problems.length) % problems.length;
+        loadProblem();
+    }
+
+    function nextProblem() {
+        currentIdx = (currentIdx + 1) % problems.length;
+        loadProblem();
+    }
+
+    function randomProblem() {
+        currentIdx = Math.floor(Math.random() * problems.length);
+        loadProblem();
+    }
+
+    // 初回読み込み
+    loadProblem();
+</script>
+
+</body>
+</html>
